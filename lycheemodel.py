@@ -121,9 +121,13 @@ class LycheePhoto:
     # Compute checksum
     def __generateHash(self):
         sha1 = hashlib.sha1()
-        with open(self.srcfullpath, 'rb') as f:
-            sha1.update(f.read())
-            self.checksum = sha1.hexdigest()
+        sha1.update(str(os.path.getsize(self.srcfullpath)))        
+        sha1.update(str(os.path.getctime(self.srcfullpath)))        
+        sha1.update(str(os.path.getmtime(self.srcfullpath)))       
+        #with open(self.srcfullpath, 'rb') as f:
+        #    sha1.update(f.read())
+        #    self.checksum = sha1.hexdigest()
+        self.checksum = sha1.hexdigest()
 
     def __init__(self, conf, photoname, album):
         # Parameters storage
