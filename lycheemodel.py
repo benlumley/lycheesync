@@ -1,6 +1,7 @@
 import time
 import hashlib
 import os
+import math
 import mimetypes
 from PIL import Image
 from PIL.ExifTags import TAGS
@@ -161,8 +162,8 @@ class LycheePhoto:
 
         # Auto file some properties
         self.type = mimetypes.guess_type(self.originalname, False)[0]
-        self.size = os.path.getsize(self.srcfullpath)
-        self.size = str(self.size / 1024) + " KB"
+        self.size = float(os.path.getsize(self.srcfullpath))
+        self.size = ('%.2f' % (self.size / (1024*1024))) + " MB"
         self._sysdate = datetime.date.today().isoformat()
         self.systime = datetime.datetime.now().strftime('%H:%M:%S')
 
@@ -179,23 +180,25 @@ class LycheePhoto:
                 if exifinfo is not None:
                     for tag, value in exifinfo.items():
                         decode = TAGS.get(tag, tag)
-                        # print tag, decode, value
+                        #print tag, decode, value
                         # if decode != "MakerNote":
                         #    print decode, value
                         if decode == "Orientation":
                             self.exif.orientation = value
                         if decode == "Make":
                             self.exif.make = value
-                        if decode == "MaxApertureValue":
-                            self.exif.aperture = value
+                        if decode == "ApertureValue":
+                            calculated = math.pow(math.sqrt(2), value[0]/float(value[1]))
+                            self.exif.aperture = "f/" + str(calculated)
                         if decode == "FocalLength":
-                            self.exif.focal = value
+                            calculated = value[0]/float(value[1])
+                            self.exif.focal = ('%.2f' % calculated) + "mm" 
                         if decode == "ISOSpeedRatings":
                             self.exif.iso = value
                         if decode == "Model":
                             self.exif.model = value
                         if decode == "ExposureTime":
-                            self.exif.shutter = value
+                            self.exif.shutter = "1/" + str(value[1]) + " s"
                         if decode == "DateTime":
                             try:
                                 self.exif._takedate = value.split(" ")[0]
@@ -211,7 +214,7 @@ class LycheePhoto:
                                 print 'WARN invalid taketime: ' + str(value) + ' for ' + self.srcfullpath
 
                     # TODO: Bad description sysdate is int
-                    self.description = str(self._sysdate) + " " + self.systime
+                    #self.description = str(self._sysdate) + " " + self.systime
         except IOError:
             print 'ERROR ioerror (corrupted ?): ' + self.srcfullpath
 
