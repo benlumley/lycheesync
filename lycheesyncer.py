@@ -292,6 +292,8 @@ class LycheeSyncer:
         album = {}
         albums = []
 
+        ignored = [];
+
         album_name_max_width = self.dao.getAlbumNameDBWidth()
 
         # walkthroug each file / dir of the srcdir
@@ -307,6 +309,23 @@ class LycheeSyncer:
             # if a there is at least one photo in the files
             if any([self.isAPhoto(f) for f in files]):
                 album['path'] = root
+
+                if "ignore" in self.conf and root.endswith(tuple(self.conf["ignore"])):
+                    msg = ("WARN: directory is ignored"), root
+                    print msg
+                    ignored.append(root)
+                    continue
+
+                if ".lycheeignore" in files:
+                    msg = ("WARN: directory ignored by .lycheeignore"), root
+                    print msg
+                    ignored.append(root)
+                    continue
+
+                if root.startswith(tuple(ignored)):
+                    msg = ("WARN: directory is a child of an ignored directory"), root
+                    print msg
+                    continue
 
                 # don't know what to do with theses photo
                 # and don't wan't to create a default album
